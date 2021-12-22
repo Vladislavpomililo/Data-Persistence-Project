@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -18,10 +19,11 @@ public class MainManager : MonoBehaviour
     
     private bool m_GameOver = false;
 
-    
+    private string Name;
     // Start is called before the first frame update
     void Start()
     {
+        MenuManager.Instance.LoadName();
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
         
@@ -64,8 +66,12 @@ public class MainManager : MonoBehaviour
 
     void AddPoint(int point)
     {
+        if(MenuManager.Instance.Name == null)
+        {
+            MenuManager.Instance.LoadName();
+        }
         m_Points += point;
-        ScoreText.text = $"Score : {m_Points}";
+        ScoreText.text = $"Score : {m_Points}" + Name;
     }
 
     public void GameOver()
