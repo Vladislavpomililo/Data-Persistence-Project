@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -13,17 +14,26 @@ public class MainManager : MonoBehaviour
 
     public Text ScoreText;
     public GameObject GameOverText;
+
+    [SerializeField] private Text recordText;
+    private int recordIntCount;
+    private string recordStringName;
     
     private bool m_Started = false;
     private int m_Points;
     
     private bool m_GameOver = false;
 
-    private string Name;
+    private string name;
     // Start is called before the first frame update
     void Start()
     {
-        MenuManager.Instance.LoadName();
+        name = MainManagerMenu.Instance.name;
+        AddPoint(0);
+
+        LoadRecord();
+        recordText.text = "Best Score : "+ recordStringName +" : "+ recordIntCount;
+
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
         
@@ -47,7 +57,7 @@ public class MainManager : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 m_Started = true;
-                float randomDirection = Random.Range(-1.0f, 1.0f);
+                float randomDirection = UnityEngine.Random.Range(-1.0f, 1.0f);
                 Vector3 forceDir = new Vector3(randomDirection, 1, 0);
                 forceDir.Normalize();
 
@@ -66,17 +76,49 @@ public class MainManager : MonoBehaviour
 
     void AddPoint(int point)
     {
-        if(MenuManager.Instance.Name == null)
-        {
-            MenuManager.Instance.LoadName();
-        }
         m_Points += point;
-        ScoreText.text = $"Score : {m_Points}" + Name;
+        ScoreText.text = $"Score : {m_Points} " + name;
     }
 
     public void GameOver()
     {
+        if(m_Points > recordIntCount)
+        {
+            SaveRecord();
+        }
         m_GameOver = true;
         GameOverText.SetActive(true);
+    }
+
+    [Serializable]
+    class SaveData
+    {
+        public string Name;
+        public int Record;
+
+    }
+
+    public void SaveRecord()
+    {
+        SaveData data = new SaveData();
+        data.Name = name;
+        data.Record = m_Points;
+
+        string json = JsonUtility.ToJson(data);
+
+        File.WriteAllText(Application.persistentDataPath + "/savefile.json", json);
+    }
+
+    public void LoadRecord()
+    {
+        string path = Application.persistentDataPath + "/savefile.json";
+        if (File.Exists(path))
+        {
+            string json = File.ReadAllText(path);
+            SaveData data = JsonUtility.FromJson<SaveData>(json);
+
+            recordStringName = data.Name;
+            recordIntCount = data.Record;
+        }
     }
 }
